@@ -1,0 +1,35 @@
+benchmark_name,problem_id,problem_name,step_number,prompt_text,function_header,test_cases,general_tests,required_dependencies,return_line
+SciCode,10,ewald_summation,10.1,"Write a Python function that calculates the energy of a periodic system using Ewald summation given `latvec` of shape `(3, 3)`, `atom_charges` of shape `(natoms,)`, `atom_coords` of shape `(natoms, 3)`, and `configs` of shape `(nelectrons, 3)` using the following formula.
+
+\begin{align}
+E &= E_{\textrm{real-cross}} + E_{\textrm{real-self}} + E_{\textrm{recip}} + E_{\textrm{charged}}. \\
+E_{\textrm{real-cross}} &= \sum_{\mathbf{n}} {}^{\prime} \sum_{i=1}^N \sum_{j>i}^N q_i q_j \frac{\textrm{erfc} \left(  \alpha |\mathbf{r}_{ij} + \mathbf{n} L| \right)}{|\mathbf{r}_{ij} + \mathbf{n} L|}. \\
+E_{\textrm{real-self}} &= - \frac{\alpha}{\sqrt{\pi}} \sum_{i=1}^N q_i^2. \\
+E_{\textrm{recip}} &= \frac{4 \pi}{V} \sum_{\mathbf{k} > 0} \frac{\mathrm{e}^{-\frac{k^2}{4 \alpha^2}}}{k^2} 
+\left| 
+\sum_{i=1}^N q_i \mathrm{e}^{i \mathbf{k} \cdot \mathbf{r}_i} \sum_{j=1}^N q_j \mathrm{e}^{-i \mathbf{k} \cdot \mathbf{r}_j}
+\right|. \\
+E_{\textrm{charge}} &= -\frac{\pi}{2 V \alpha^2} \left|\sum_{i}^N q_i \right|^2.
+\end{align}
+
+""""""
+Parameters:
+    latvec (np.ndarray): A 3x3 array representing the lattice vectors.
+    atom_charges (np.ndarray): An array of shape (natoms,) representing the charges of the atoms.
+    atom_coords (np.ndarray): An array of shape (natoms, 3) representing the coordinates of the atoms.
+    configs (np.ndarray): An array of shape (nelectrons, 3) representing the configurations of the electrons.
+    gmax (int): The maximum integer number of lattice points to include in one positive direction.
+
+Returns:
+    float: The total energy from the Ewald summation.
+""""""
+
+Write a Python function to determine the alpha value for the Ewald summation given reciprocal lattice vectors `recvec` of shape (3, 3). Alpha is a parameter that controls the division of the summation into real and reciprocal space components and determines the width of the Gaussian charge distribution. Multiply the result by scaling `alpha_scaling` (fixed to 5).","def get_alpha(recvec, alpha_scaling=5):
+    '''Calculate the alpha value for the Ewald summation, scaled by a specified factor.
+    Parameters:
+        recvec (np.ndarray): A 3x3 array representing the reciprocal lattice vectors.
+        alpha_scaling (float): A scaling factor applied to the alpha value. Default is 5.
+    Returns:
+        float: The calculated alpha value.
+    '''","[""ref1 = -1.74756\nEX1 = {\n    'latvec': np.array([\n        [0.0, 1.0, 1.0],\n        [1.0, 0.0, 1.0],\n        [1.0, 1.0, 0.0]\n        ]),\n    'atom_charges': np.array([1]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0]\n    ]),\n}\nassert np.allclose(get_alpha(np.linalg.inv(EX1['latvec']).T), target)"", ""ref2 = -6.99024\nEX2 = {\n    'latvec': np.array([\n        [2.0, 0.0, 0.0],\n        [0.0, 2.0, 0.0],\n        [0.0, 0.0, 2.0]\n        ]),\n    'atom_charges': np.array([1, 1, 1, 1]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0],\n        [1.0, 1.0, 0.0],\n        [1.0, 0.0, 1.0],\n        [0.0, 1.0, 1.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [1.0, 0.0, 0.0],\n        [0.0, 1.0, 0.0],\n        [0.0, 0.0, 1.0]\n        ])    \n}\nassert np.allclose(get_alpha(np.linalg.inv(EX2['latvec']).T), target)"", ""ref3 = -5.03879\nL = 4 / 3**0.5\nEX3 = {\n    'latvec': (np.ones((3, 3)) - np.eye(3)) * L / 2,\n    'atom_charges': np.array([2]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [3.0, 3.0, 3.0],        \n        ]) * L/4\n    }\nassert np.allclose(get_alpha(np.linalg.inv(EX3['latvec']).T), target)"", ""ref4 = -20.15516\nEX4 = {\n    'latvec': np.eye(3, 3) * L,\n    'atom_charges': np.array([2, 2, 2, 2]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0],\n        [1.0, 1.0, 0.0],\n        [1.0, 0.0, 1.0],\n        [0.0, 1.0, 1.0] \n    ]) * L/2,\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [1.0, 1.0, 3.0],\n        [1.0, 3.0, 1.0],\n        [1.0, 3.0, 3.0],\n        [3.0, 1.0, 1.0],\n        [3.0, 1.0, 3.0],\n        [3.0, 3.0, 1.0],\n        [3.0, 3.0, 3.0]        \n    ]) * L/4\n}\nassert np.allclose(get_alpha(np.linalg.inv(EX4['latvec']).T), target)""]","[""ref1 = -1.74756\nEX1 = {\n    'latvec': np.array([\n        [0.0, 1.0, 1.0],\n        [1.0, 0.0, 1.0],\n        [1.0, 1.0, 0.0]\n        ]),\n    'atom_charges': np.array([1]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0]\n    ]),\n}\nassert np.allclose(np.abs(total_energy(**EX1, gmax=200) - ref1), target)"", ""ref2 = -6.99024\nEX2 = {\n    'latvec': np.array([\n        [2.0, 0.0, 0.0],\n        [0.0, 2.0, 0.0],\n        [0.0, 0.0, 2.0]\n        ]),\n    'atom_charges': np.array([1, 1, 1, 1]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0],\n        [1.0, 1.0, 0.0],\n        [1.0, 0.0, 1.0],\n        [0.0, 1.0, 1.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [1.0, 0.0, 0.0],\n        [0.0, 1.0, 0.0],\n        [0.0, 0.0, 1.0]\n        ])    \n}\nassert np.allclose(np.abs(total_energy(**EX2, gmax=200) - ref2), target)"", ""ref3 = -5.03879\nL = 4 / 3**0.5\nEX3 = {\n    'latvec': (np.ones((3, 3)) - np.eye(3)) * L / 2,\n    'atom_charges': np.array([2]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0]\n        ]),\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [3.0, 3.0, 3.0],        \n        ]) * L/4\n    }\nassert np.allclose(np.abs(total_energy(**EX3, gmax=200) - ref3), target)"", ""ref4 = -20.15516\nEX4 = {\n    'latvec': np.eye(3, 3) * L,\n    'atom_charges': np.array([2, 2, 2, 2]),\n    'atom_coords': np.array([\n        [0.0, 0.0, 0.0],\n        [1.0, 1.0, 0.0],\n        [1.0, 0.0, 1.0],\n        [0.0, 1.0, 1.0] \n    ]) * L/2,\n    'configs': np.array([\n        [1.0, 1.0, 1.0],\n        [1.0, 1.0, 3.0],\n        [1.0, 3.0, 1.0],\n        [1.0, 3.0, 3.0],\n        [3.0, 1.0, 1.0],\n        [3.0, 1.0, 3.0],\n        [3.0, 3.0, 1.0],\n        [3.0, 3.0, 3.0]        \n    ]) * L/4\n}\nassert np.allclose(np.abs(total_energy(**EX4, gmax=200) - ref4), target)""]","import numpy as np
+from scipy.special import erfc",return alpha
